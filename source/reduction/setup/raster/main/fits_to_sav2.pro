@@ -12,12 +12,12 @@ pro fits_to_sav2
 Compile_opt idl2  ; necessary to make integers a long (32 bit) value, rather than a short (int / 16 bit value)
   
 sat='BA'      ; choose satellite
-field='ORION' ; choose field
+field='CENTAURUS' ; choose field
   
 skipfiles=0  ;   ; number of fits files to skip over - if faulty
   
-indir='~/BRITE/data/'+sat+'/fits_data/rasters/ORION/'  ; location of fits files
-outdir='~/BRITE/data/'+sat+'/roi_raw/ORION/' ; location where save files will go
+indir='~/BRITE/'+sat+'/'+field+'/data/raw_fits/rasters/'  ; location of fits files
+outdir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/' ; location where save files will go
   
 newtargets,indir,targets    ; call newtargets to get all HD names contained in this set of fits files
   
@@ -26,19 +26,20 @@ nroi=n_elements(target)     ; number of unique ROIs to "unpack"
   
 fitsfiles=file_search(indir+'*.fits', count=nfits)  ; locate and count ALL fits files
   
-counter=16670+skipfiles ; start a counter to move through each fits file
+counter=0+skipfiles ; start a counter to move through each fits file
   
-for roi=0, nroi-1 do begin
+for roi=1, nroi-1 do begin
   
   print, 'Starting to build arrays for '+target[roi]
   
-  statsfile=outdir+'stats/'+strcompress(target[roi], /remove_all)+'_roib.txt'
+  statsfile=outdir+'stats/'+strcompress(target[roi], /remove_all)+'_roi.txt'
     
   repeat begin
     
     ; DATA
     data=mrdfits(fitsfiles[counter], target[roi], hdr, status=status, /silent)  ; get data for this ROI
-    if status eq -1 then goto, next_file      ; -1=fail (i.e. no data)
+    if status ne 0 then goto, next_file      ; -1=fail (i.e. no data)
+    ;if status ne 0 then stop      ; -1=fail (i.e. no data)
     
     ; HEADER INFO
     ext0=mrdfits(fitsfiles[counter], 0, header, /silent) ; get the julian date
@@ -152,7 +153,7 @@ for roi=0, nroi-1 do begin
   printf, lun, nsaved, 'files_saved_out_of', strtrim(nfits,2), format='(a10,x,a20,x,a10)'
   free_lun, lun
     
-  fileout=outdir+'sav/'+extname+'_p0b.sav' ; make file
+  fileout=outdir+extname+'_p0.sav' ; make file
     
   save, filename=fileout, roi_name, exp_num, ra_dec, jd, data1, roi_loc, ccd_temp, exp_time, exp_ttl
     
@@ -162,7 +163,7 @@ for roi=0, nroi-1 do begin
   undefine, jd, roi_name, exp_num, ra_dec, data1, roi_loc, ccd_temp, exp_time, exp_ttl
   skipfiles=0
   
-  counter=16670+skipfiles
+  counter=0+skipfiles
   
     
 endfor  ; end loop over this roi
