@@ -14,8 +14,8 @@ pro roi_fitsinfo
   
   Compile_opt idl2  ; necessary to make integers a long (32 bit) value, rather than a short (int / 16 bit value)
   
-  sat='UB'      ; choose satellite
-  field='CENTAURUS' ; choose field
+  sat='BA'      ; choose satellite
+  field='ORION' ; choose field
   
   skipfiles=0  ;   ; number of fits files to skip over - if faulty
   
