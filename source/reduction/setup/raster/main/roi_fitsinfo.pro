@@ -15,12 +15,14 @@ pro roi_fitsinfo
   Compile_opt idl2  ; necessary to make integers a long (32 bit) value, rather than a short (int / 16 bit value)
   
   sat='BA'      ; choose satellite
-  field='ORION' ; choose field
+  field='CENTAURUS' ; choose field
   
   skipfiles=0  ;   ; number of fits files to skip over - if faulty
   
-  indir='~/BRITE/'+sat+'/'+field+'/data/raw_fits/rasters/'  ; location of fits files
-  outdir='~/BRITE/'+sat+'/'+field+'/data/raw_txt/' ; location where save files will go
+  dates=['2014-06','2014-07']
+  
+  indir='~/BRITE/'+sat+'/'+field+'/data/raw_fits/rasters/'+dates+'/'  ; location of fits files
+  outdir='~/BRITE/'+sat+'/'+field+'/data/raw_txt/2014-0607/' ; location where save files will go
   
   fitsfiles=file_search(indir+'*.fits', count=nfits)  ; locate and count ALL fits files
   
@@ -31,8 +33,14 @@ pro roi_fitsinfo
   print, 'Start time is: '+systime()
   
   for f=skipfiles, nfits-1 do begin
+    
+    ; calculate percentage of fits done
+    pcent=float(f)/float(nfits)*100.
   
     fname=file_basename(fitsfiles[f], '.fits')
+    
+    if f eq 0. then print, 'Processing '+fname+' 0th file'
+    if f mod 100. eq 0 then print, strtrim(pcent,2)+' percent done'
     
     ; check that file is not corrupt, else skipover
     ; HEADER INFO
@@ -109,7 +117,7 @@ pro roi_fitsinfo
       fileout=outdir+roi_name+'_fitsinfo.txt'
       openw, lun, fileout, /get_lun, /append
       printf, lun, sat, field, obsdate, fname, roi_name, exp_num, exp_time, exp_ttl, sdata[0], sdata[1], $
-        format='(a5,x,a10,x,a10,x,a30,x,a10,x,i6,x,f6.3,x,f6.3,x,i3,x,i3)'
+        format='(a5,x,a10,x,a10,x,a40,x,a10,x,i6,x,f6.3,x,f6.3,x,i3,x,i3)'
       free_lun, lun
     endfor  ; end loop over this ROI
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,6 +128,6 @@ pro roi_fitsinfo
   
   print, 'End time is: '+systime()
   print, 'End of program'
-  print, 'Now extract roi data with fits_to_sav3'
+  print, 'Now extract roi data with fits_to_sav3b'
   
 end

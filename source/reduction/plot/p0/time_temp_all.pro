@@ -5,11 +5,11 @@ pro time_temp_all
 ; 
 Compile_opt idl2
 
-sat='BA'
+sat='UB'
 field='ORION'
 
 ; input directory
-indir='/Users/gemmawhittaker/BRITE/'+sat+'/'+field+'/data/raw_sav/'
+indir='/Users/gemmawhittaker/BRITE/'+sat+'/'+field+'/data/raw_sav/HD31237/'
 
 ; input files
 filesin=file_search(indir+'*.sav', count=nf)
@@ -69,19 +69,26 @@ for ii=0, 0 do begin  ; do only once
   temps=temps[sort1]
   size=size[sort1]
   
+  ; find out how many sized rasters
+  usize=size[uniq(size, sort(size))]
+  nsize=n_elements(usize)
+  if nsize gt 2 then stop
+  
   ; convert start and end times into actual dates
   caldat, time, mon, day, yr
   dates=strtrim(day,2)+'_'+strtrim(mon,2)+'_'+strtrim(yr,2)
   
   time=time-2454000D
   
+  ; set up some colours for plotting
+  cols1=[cgcolor('orange red'),cgcolor('slate grey')]
+  
   plotsym, 0, /fill, 0.2
   ps_on, fileout+'.ps', xsize=15, ysize=13
   plot, time, temps, color=cgcolor('black'), /nodata, title=sat+' - '+field+' - '+dates[0]+' to '+dates[npts-1], $
     xtitle='Time (JD - 2454000)', ytitle='Average CCD temperature', charsize=0.7
-  oplot, time[where(size eq 32)], temps[where(size eq 32)], psym=8, color=cgcolor('orange red')
-  oplot, time[where(size eq 24)], temps[where(size eq 24)], psym=8, color=cgcolor('slate grey')
-  al_legend, ['32x32','24x24'], psym=8, colors=[cgcolor('orange red'),cgcolor('slate grey')], /left, textcolor='black', $
+for rs=0, nsize-1 do oplot, time[where(size eq usize[rs])], temps[where(size eq usize[rs])], psym=8, color=cols1[rs]
+  al_legend, [strtrim(usize,2)], psym=8, colors=cols1, /left, textcolor='black', $
     /box, outline_color=cgcolor('black'), charsize=0.7
   ps_off
   

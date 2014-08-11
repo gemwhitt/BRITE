@@ -13,11 +13,11 @@ pro fits_to_sav3b
   Compile_opt idl2  ; necessary to make integers a long (32 bit) value, rather than a short (int / 16 bit value)
   
   sat='BA'      ; choose satellite
-  field='ORION' ; choose field
+  field='CENTAURUS' ; choose field
   
-  fitsdir='~/BRITE/'+sat+'/'+field+'/data/raw_fits/rasters/'  ; location of fits files
-  savdir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'            ; location where save files will go
-  txtdir='~/BRITE/'+sat+'/'+field+'/data/raw_txt/'            ; location of txt info files
+  fitsdir='~/BRITE/'+sat+'/'+field+'/data/raw_fits/rasters/2014_0607/'  ; location of fits files
+  savdir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/2014_0607/'            ; location where save files will go
+  txtdir='~/BRITE/'+sat+'/'+field+'/data/raw_txt/2014_0607/'            ; location of txt info files
   
   target_files=file_search(txtdir+'HD*.txt', count=nroi)  ; locate the target (info) files
   targets=file_basename(target_files, '_fitsinfo.txt')    ; get the target names
@@ -69,7 +69,9 @@ pro fits_to_sav3b
         ; match targets[roi] to extnames1
         xx=where(extnames1 eq targets[roi], nmatch)
         
-        if nmatch ne 1 then stop  ; if either there is no match - or > 1 match stop
+        if nmatch ne 1 then begin
+          if nmatch eq 2 then xx=xx[0] else stop  ; if either there is no match - or > 1 match stop
+        endif
         
         ; DATA
         data=mrdfits(fitsfile, extnames[xx], hdr, status=status, /silent)  ; get data for this ROI
@@ -129,7 +131,18 @@ pro fits_to_sav3b
           
           ;check for duplicate times
           utime=jd[uniq(jd, sort(jd))]
-          if n_elements(utime) lt n_elements(jd) then stop
+          if n_elements(utime) lt n_elements(jd) then begin
+            keep=uniq(jd, sort(jd))
+            jd=jd[keep]
+            ccd_temp=ccd_temp[*,keep]
+            data1=data1[*,*,keep]
+            exp_num=exp_num[keep]
+            exp_time=exp_time[keep]
+            exp_ttl=exp_ttl[keep]
+            ra_dec=ra_dec[*,keep]
+            roi_name=roi_name[keep]
+            roi_loc=roi_loc[*,keep]
+          endif
           
           fileout=roi_dir+'/'+targets[roi]+'_'+uparam[obs]+'_p0_'+strtrim(saved,2)+'.sav' ; make file
           save, filename=fileout, roi_name, exp_num, ra_dec, jd, data1, roi_loc, ccd_temp, exp_time, exp_ttl
@@ -144,7 +157,17 @@ pro fits_to_sav3b
       
       ;check for duplicate times
       utime=jd[uniq(jd, sort(jd))]
-      if n_elements(utime) lt n_elements(jd) then stop
+      if n_elements(utime) lt n_elements(jd) then begin
+        jd=jd[uniq(jd, sort(jd))]
+        roi_name=roi_name[uniq(jd, sort(jd))]
+        exp_num=exp_num[uniq(jd, sort(jd))]
+        ra_dec=ra_dec[*,uniq(jd, sort(jd))]
+        data1=data1[*,*,uniq(jd, sort(jd))]
+        roi_loc=roi_loc[*,uniq(jd, sort(jd))]
+        ccd_temp=ccd_temp[*,uniq(jd, sort(jd))]
+        exp_time=exp_time[uniq(jd, sort(jd))]
+        exp_ttl=exp_ttl[uniq(jd, sort(jd))]
+      endif
       
       fileout=roi_dir+'/'+targets[roi]+'_'+uparam[obs]+'_p0_'+strtrim(saved,2)+'.sav' ; make file
       save, filename=fileout, roi_name, exp_num, ra_dec, jd, data1, roi_loc, ccd_temp, exp_time, exp_ttl
@@ -161,9 +184,7 @@ pro fits_to_sav3b
     endfor  ; end loop over this unique observation sequence
     
   endfor ; end loop over this target
-  
-  spawn, 'sudo purge'
-  
+    
   print, 'end time, ',systime()
   print, 'End of program'
   print, 'Run SIMBAD info '+savdir

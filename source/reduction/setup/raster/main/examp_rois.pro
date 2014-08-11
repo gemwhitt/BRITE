@@ -4,48 +4,51 @@ pro examp_rois
   
 Compile_opt idl2
 
-sat='UB'
+sat='BA'
 field='CENTAURUS'
 
+im=0
+
+; outdir
+outdir='~/BRITE/'+sat+'/'+field+'/plots/p1/PSFs/'
+
 ; input directory
-indir='~/BRITE/data/'+sat+'/p2/'+field+'/'
+savdir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/'
+
+filesin=file_search(savdir+'*.sav', count=nf)
+
+fname=file_basename(filesin, '.sav')
   
-savfiles=file_search(indir+'*.sav', count=nsav)
-  
-fnames=file_basename(savfiles, '_p2.sav')
-targets=fnames
-  
-outdir='~/BRITE/data/'+sat+'/plots/'+field+'/PSFs/'
+for ff=0, nf-1 do begin
+    obj=obj_new('IDL_Savefile', filesin[ff])
+    obj->restore, 'data1'
+    obj->restore, 'vmag'
+    obj->restore, 'bmag'
+    obj->restore, 'roi_name'
+    obj->restore, 'ccd_temp'
     
-for kk=0, nsav-1 do begin
-  
-  obj=obj_new('IDL_Savefile', savfiles[kk])
-  obj->restore, 'data1'
-  obj->restore, 'vmag'
-  obj->restore, 'bmag'
-  obj->restore, 'roi_name'
-  
-  bminv=bmag-vmag
-  
-  vmag=strmid(strtrim(vmag,2),0, 4)
-  bminv=strmid(strtrim(bminv,2),0, 5)
-  
+    stop
     
-  hdname=roi_name[0]
+    target=roi_name[0]
     
-  ; determine number of images
-  npts=n_elements(jd)
+    bminv=bmag-vmag
     
-  data2=data1[*,*,0]*(-1.)
+    vmag=strmid(strtrim(vmag,2),0, 4)
+    bminv=strmid(strtrim(bminv,2),0, 5)
+       
+    ; determine number of images
+    nimg=n_elements(jd)
     
-  fileout=outdir+hdname+'_psf.ps'
-  ps_on, fileout, xsize=19, ysize=17
-  plot_image, bytscl(data2, -200, 0), xtitle='x-pixel', ytitle='y-pixel', $
-    title=hdname+', V = '+vmag+', B-V = '+bminv, charsize=0.7, background=cgcolor('white')
-  ps_off
+    data2=data1[*,*,im]*(-1.)
     
-endfor
+    fileout=outdir+fname[ff]+'_psfL.ps'
+    ps_on, fileout, xsize=19, ysize=17
+    plot_image, bytscl(data2, -200, 0), xtitle='x-pixel', ytitle='y-pixel', $
+      title=sat+', '+field+', '+target+', V = '+vmag+', B-V = '+bminv, charsize=0.7, background=cgcolor('white')
+    ps_off
+  endfor
   
 print, 'end of program'
+print, 'See output files in '+outdir
 end
 

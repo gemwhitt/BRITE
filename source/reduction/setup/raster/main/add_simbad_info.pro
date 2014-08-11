@@ -8,7 +8,7 @@ pro add_simbad_info
 
 Compile_opt idl2
 
-sat='UB'
+sat='BA'
 field='CENTAURUS'
 
 if field eq 'ORION' then $
@@ -21,7 +21,7 @@ restore, template_file  ; template1=['ID', 'COO', 'FLX', OTYPE', 'PLX', 'SPTYPE'
 
 simb_results='~/BRITE/simbad/returns/'+field+'.txt'  ; file with simbad results
 
-savdir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'
+savdir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/2014_0607/'
 
 result=read_ascii(simb_results, template=template1) ; read the results file using the template
 

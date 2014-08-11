@@ -4,8 +4,8 @@ pro ccdloc_vs_medimg0
 ;
 Compile_opt idl2
 
-sat='BA'
-field='CENTAURUS'
+sat='UB'
+field='ORION'
 
 indir='/Users/gemmawhittaker/BRITE/'+sat+'/'+field+'/stats/p0/'
 

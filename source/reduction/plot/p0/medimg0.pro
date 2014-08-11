@@ -9,8 +9,8 @@ plotsym, 0, /fill, 0.3
 
 makeplot='y'
 
-sat='BA'
-field='CENTAURUS'
+sat='UB'
+field='ORION'
 
 indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'
 

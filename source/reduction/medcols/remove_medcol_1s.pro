@@ -4,20 +4,20 @@ pro remove_medcol_1s
 ;
 ; Modified from remove_medcol.pro - process ONLY 1s files
 ; Save as: e.g. HDxxxx_24_24_p1_0.sav 
-
-
+; 
+; Remove top row from rasters which contain the full-frame  med cols
 Compile_opt idl2
   
 sat='BA'
-field='ORION'
+field='CENTAURUS'
   
 opt='2' ; which median columns to use
  
-indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'; CONTAINS ALL RASTER DIRECTORIES
+indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/2014_0607/'; CONTAINS ALL RASTER DIRECTORIES
   
 tardir=file_search(indir+'HD*/', count=ntar)
   
-outdir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol'+opt+'/'
+outdir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol'+opt+'/2014_0607/'
   
 for tar=0, ntar-1 do begin  ; loop over each target directory
   
@@ -33,11 +33,15 @@ for tar=0, ntar-1 do begin  ; loop over each target directory
       restore, filesin[i]   ;roi_name, exp_num, ra_dec, jd, roi_loc, ccd_temp, exp_time, exp_ttl, $
       ;simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, ndead, nsat, medcol1, medcol2, data1
       
+      ; get index of this file from fname
+      flen=strlen(fname[i])
+      ind=strmid(fname[i], flen-1)
+      
       if exp_time[0] ne 1. OR exp_ttl[0] ne 1. then continue ; do not process this file!
       
       nimg=n_elements(jd)
       
-      tempdata=data1
+      tempdata=[]
       
       ; loop over each image and each column -
       ;   subtract the medcol1/medcol2 value, make any negative pixels non-zero
@@ -46,6 +50,10 @@ for tar=0, ntar-1 do begin  ; loop over each target directory
         data2=data1[*,*,im]
         
         xdim=(size(data2, /dim))[0]
+        ydim=(size(data2, /dim))[1]
+        
+        if ydim mod 2 eq 1 then data2=data2[*,0:ydim-2] ; this removes the top row (full frame medcols)
+        ;stop ; check this
         
         if opt eq '1' then for kk=0, xdim-1 do data2[kk,*]=data2[kk,*]-medcol1[kk,im]
         
@@ -64,7 +72,7 @@ for tar=0, ntar-1 do begin  ; loop over each target directory
         endif
         
         ; save new data2 in tempdata
-        tempdata[*,*,im]=data2
+        tempdata=[[[tempdata]],[[data2]]]
         
       endfor  ; end loop over image - keep going until all images are processed
       
@@ -81,17 +89,23 @@ for tar=0, ntar-1 do begin  ; loop over each target directory
       ydim=strtrim(sdata[1],2)
       
       ; check output directory exists and make if not
-      chk=file_search(outdir+tar_name, count=nchk)
-      
-      if nchk eq 0 then spawn, 'mkdir '+outdir+tar_name
-      
-      ; get index of this file from fname
-      flen=strlen(fname[i])
-      ind=strmid(fname[i], flen-1)
-      
-      
-      fileout=outdir+tar_name+'/'+tar_name+'_'+xdim+'_'+ydim+'_p1_'+ind+'.sav'
+      chk1=file_search(outdir+tar_name, count=nchk1)      
+      if nchk1 eq 0 then spawn, 'mkdir -p '+outdir+tar_name
 
+      ; check for other files with similar name (e.g. the ones with same size raster but extra row)
+      ; because we don't want to overwrite these!
+      ; check output directory exists and make if not
+      check_again:
+      fileout=outdir+tar_name+'/'+tar_name+'_'+xdim+'_'+ydim+'_p1_'+ind+'.sav'
+      
+      chk2=file_search(fileout, count=nchk2)
+      if nchk2 gt 0 then begin
+        ind2=ind+1
+        ind=strtrim(ind2,2)
+        ; check again
+        goto, check_again
+      endif 
+      
       save, filename=fileout, roi_name, exp_num, ra_dec, jd, roi_loc, ccd_temp, exp_time, exp_ttl, $
         simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, ndead, nsat, medcol1, medcol2, data1
         

@@ -4,13 +4,13 @@ pro locate_rois
 ; 
 Compile_opt idl2
 
-sat='BA'
+sat='UB'
 
 field='CENTAURUS'
 
 indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'
 
-outdir='~/BRITE/'+sat+'/'+field+'/data/plots/'
+outdir='~/BRITE/'+sat+'/'+field+'/plots/raw/'
 
 fileout=outdir+sat+'-'+field+'_ccdroi.ps'
 

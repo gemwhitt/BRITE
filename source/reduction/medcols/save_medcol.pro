@@ -1,15 +1,15 @@
 pro save_medcol
 
 ;   Calculate raster median columns, extract full-frame median columns
-;   Re-save the data array - without the extra row
-;   Save medcol1 (full-frame) and medcol2 (raster)
+
+;   Save medcol1 (full-frame) and medcol2 (raster) AND ndead and nsat
 ;   
 Compile_opt idl2
 
-sat='BA'
+sat='UB'
 field='CENTAURUS'
 
-indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'
+indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/2014_0607/'
 
 tardir=file_search(indir+'HD*/', count=ntar) ; target directories
 
@@ -36,14 +36,24 @@ for tar=0, ntar-1 do begin
     ndead=intarr(nimg)  ; initial number of dead pixels on image
     nsat=intarr(nimg)   ; number of pixels above a given threshold on the image
     
-    tempdata=lonarr(xdim, ydim-1,nimg) ; temporary array for new dataset with extra row trimmed off
-    
     for im=0, nimg-1 do begin
     
-      data2=data1[0:xdim-1,0:ydim-2,im]   ; image data
+      ; first check that top row is medcol values and not just data
+      ; rasters will usually contain an even number of rows/columns - ASSUMPTION!!!
+      ; so check this modify accordingly
       
-      tempdata[*,*,im]=data2
+      if ydim mod 2 eq 0 then data2=data1[0:xdim-1,0:ydim-1,im] $ ; even number of rows - i.e rasters don't contain extra info
+        else begin                                                ; odd number of rows - i.e rasters contain medcol values
+          data2=data1[0:xdim-1,0:ydim-2,im]    
+          
+          ; extract the fullframe median columns
+          medcol1[*,im]=data1[*,ydim-1,im]
+        endelse
       
+      ; calculate median from raster
+      sdata2=size(data2, /dim)
+      for k=0, xdim-1 do medcol2[k,im]=median(data2[k,0:sdata2[1]-1])
+                     
       medimg0[im]=median(data2)           ; calculate image median
       
       dead=where(data2 le 0, num_dead)    ; check for dead pixels
@@ -52,15 +62,7 @@ for tar=0, ntar-1 do begin
       sat=where(data2 ge 10000, num_sat)  ; check for nonlinear
       nsat[im]=num_sat
       
-      ; extract the fullframe median columns
-      medcol1[*,im]=data1[*,ydim-1,im]
-      
-      ; calculate median from raster
-      for k=0, xdim-1 do medcol2[k,im]=median(data2[k,0:ydim-2])
-      
     endfor  ; end loop over this image
-      
-    data1=tempdata
       
     ; save output
     fileout=filesin[ff]
@@ -74,6 +76,6 @@ endfor  ; end loop over this file
 endfor  ; end loop over this target
 
 print, 'End of program'
-print, 'Do remove_medcol1 OR remove_medcol2'
+print, 'Do remove_medcol_1s'
 
 end
