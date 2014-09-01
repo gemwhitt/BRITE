@@ -1,47 +1,32 @@
 pro concat_files2
 
-  ; Purpose: concatenate files together for the same target, same roi - after med columns removal
+  ; Purpose: concatenate files together for the same target, same roi ....
   
-  ; destroy the directories in the process
+  ; when files have been added for the same field. 
+  
+  ; Use concat_files1 if there are no previous files for that field
   
   sat='BA'
   field='CENTAURUS'
   
-  indir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/2014_0607/'
-  
-  tardir=file_search(indir+'HD*/', count=ntar)
-  
-  outdir=indir+'concat/'
+  indir=['~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/','~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/2014_0607/']
+    
+  outdir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/concat/'
   ; check outdir exisits and if not - make it
   chk=file_search(outdir, count=nchk)
   if nchk eq 0 then spawn, 'mkdir -p '+outdir
   
-  for tar=0, ntar-1 do begin
+  filesin=file_search(indir+'*.sav', count=nf)
   
-    filesin=file_search(tardir[tar]+'/*.sav', count=nf)
-    
-    fname=file_basename(filesin, '.sav')
-    
-    dash=strsplit(fname, '_')
-    
-    hd_roi=strarr(nf)
-    ind=strarr(nf)
-    
-    if nf gt 1 then begin
-      for ff=0, nf-1 do hd_roi[ff]=strmid(fname[ff], 0, dash[ff,3]-1)
-      for ff=0, nf-1 do ind[ff]=strmid(fname[ff], dash[ff,4])
-    endif else begin
-      hd_roi[0]=strmid(fname[0], 0, dash[3]-1)
-      ind[0]=strmid(fname[0], dash[4])
-    endelse
-    
-    ; get number of unique output files to make
-    uf=hd_roi[uniq(hd_roi, sort(hd_roi))]
-    nuf=n_elements(uf)
+  fname=file_basename(filesin, '.sav')
+  
+  ; get number of unique output files to make
+  uf=fname[uniq(fname, sort(fname))]
+  nuf=n_elements(uf)
     
     for ii=0, nuf-1 do begin
     
-      files=filesin[where(hd_roi eq uf[ii], nf)]  ; files to be restored and concatenated
+      files=filesin[where(fname eq uf[ii], nf)]  ; files to be restored and concatenated
       
       ; set up temporary arrays
       exp_num1=[]
@@ -94,12 +79,10 @@ pro concat_files2
         
     endfor  ; end loop over this unique output file
     
-  endfor  ; end loop over this target
   
-  
-  for ii=0, ntar-1 do spawn, 'rm -r '+tardir[ii]
-  
+   
   print, 'End of program'
+  print, 'Check output files'
   print, 'Run map_hps2.pro, then correct_hps.pro'
   
 end

@@ -36,7 +36,7 @@ for ff=0, 0 do begin  ;nf-1 do begin
   sort1=sort(tdiff)
   tdiffs=tdiff[sort1]
   
-  if tdiffs[0] lt 1. then im=sort1[30] else stop
+  if tdiffs[0] lt 1. then im=sort1[0] else stop
   
   target=roi_name[0]
     

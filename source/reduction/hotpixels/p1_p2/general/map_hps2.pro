@@ -13,8 +13,8 @@ pro map_hps2
   
 Compile_opt idl2
 
-sat='BA'
-field='ORION'
+sat='LEM'
+field='CENTAURUS'
 thr=50  ; threshold above which HPs are identified
   
 indir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/'

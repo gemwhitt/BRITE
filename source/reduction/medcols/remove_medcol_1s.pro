@@ -8,16 +8,16 @@ pro remove_medcol_1s
 ; Remove top row from rasters which contain the full-frame  med cols
 Compile_opt idl2
   
-sat='BA'
+sat='TOR'
 field='CENTAURUS'
   
 opt='2' ; which median columns to use
  
-indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/2014_0607/'; CONTAINS ALL RASTER DIRECTORIES
+indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'; CONTAINS ALL RASTER DIRECTORIES
   
 tardir=file_search(indir+'HD*/', count=ntar)
   
-outdir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol'+opt+'/2014_0607/'
+outdir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol'+opt+'/'
   
 for tar=0, ntar-1 do begin  ; loop over each target directory
   
@@ -32,6 +32,9 @@ for tar=0, ntar-1 do begin  ; loop over each target directory
       ; restore the whole file - because we are re-saving
       restore, filesin[i]   ;roi_name, exp_num, ra_dec, jd, roi_loc, ccd_temp, exp_time, exp_ttl, $
       ;simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, ndead, nsat, medcol1, medcol2, data1
+      
+      stop
+      continue
       
       ; get index of this file from fname
       flen=strlen(fname[i])
