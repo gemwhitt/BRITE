@@ -4,7 +4,7 @@ pro concat_files1
 
 ; destroy the directories in the process
 
-sat='BA'
+sat='UB'
 field='CENTAURUS'
   
 indir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/2014_0607/'
@@ -98,6 +98,10 @@ endfor  ; end loop over this target
 
 
 for ii=0, ntar-1 do spawn, 'rm -r '+tardir[ii]
+
+spawn, 'mv '+outdir+'*.sav '+indir
+
+spawn, 'rmdir '+outdir
  
 print, 'End of program'
 print, 'Run map_hps2.pro, then correct_hps.pro'

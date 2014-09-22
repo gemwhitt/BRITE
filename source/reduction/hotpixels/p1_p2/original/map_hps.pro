@@ -15,9 +15,9 @@ imagelib    ; adds system variable !IMAGE needed for plotting
 plotsym, 0, /fill, 1.
 
 ; input directory
-indir='~/BRITE/data/UB/p1/ORION/'
+indir='~/BRITE/TESTSETS/werner4lc/p4/'
   
-outdir='~/BRITE/data/UB/reduction/hot_pixel_maps/ORION/'
+outdir='~/BRITE/TESTSETS/werner4lc/hpmaps/'
   
 filesin=file_search(indir+'*.sav', count=nsav)
 fname=file_basename(filesin, '.sav')
@@ -26,7 +26,7 @@ if nsav eq 0 then stop
   
 for bb=0, nsav-1 do begin
   
-  hdname=file_basename(filesin[bb], '_p1.sav') 
+  hdname=file_basename(filesin[bb], '.sav') 
   
   print, hdname 
   
@@ -42,15 +42,15 @@ for bb=0, nsav-1 do begin
   totdn=lonarr(nfrm)
   for img=0, nfrm-1 do totdn[img]=total(data1[*,*,img])
   
-  rej1=where(medimg0 gt 5000 OR totdn lt 5000, nrej1, complement=keep1) ; bad images - discard
-  
-  nkeep=n_elements(keep1)
-  
-  jd=jd[keep1]
-  data1=data1[*,*,keep1]
-  medimg0=medimg0[keep1]
-  totdn=totdn[keep1]
-  ccd_temp=ccd_temp[*,keep1]
+;  rej1=where(medimg0 gt 5000 OR totdn lt 5000, nrej1, complement=keep1) ; bad images - discard
+;  
+;  nkeep=n_elements(keep1)
+;  
+;  jd=jd[keep1]
+;  data1=data1[*,*,keep1]
+;  medimg0=medimg0[keep1]
+;  totdn=totdn[keep1]
+;  ccd_temp=ccd_temp[*,keep1]
   
   nfrm=n_elements(jd)
   
@@ -95,9 +95,9 @@ for bb=0, nsav-1 do begin
     num_hp[ii]=nhp
     avg_temp[ii]=avg(ccd_temp[*,iloc])
     
-    ;plot_image, bytscl(ima, 20, 100)
-    ;oplot, [wx], [wy], psym=8, color=cgcolor('purple')
-    ;wait, 0.4
+    plot_image, bytscl(ima, 20, 100)
+    oplot, [wx], [wy], psym=8, color=cgcolor('purple')
+    stop
     
     if nhp eq 0 then goto, no_hp
 ;    stop
@@ -108,11 +108,11 @@ for bb=0, nsav-1 do begin
     ; check if there are new HPs and if so - save them to the map
     if n_elements(hp_xy) eq 0 then hp_xy=hp_loc else hp_xy=[[hp_xy],[hp_loc]]
     
-    ;wset, 0
-    ;plot_image, bytscl(ima, 20, 300)
-    ;oplot, hp_xy[0,*], hp_xy[1,*], color=cgcolor('orange'), psym=2
+    wset, 0
+    plot_image, bytscl(ima, 20, 300)
+    oplot, hp_xy[0,*], hp_xy[1,*], color=cgcolor('orange'), psym=2
     
-;stop
+stop
     
     
     no_hp:
