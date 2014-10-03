@@ -1,31 +1,27 @@
-pro plot_aper_lcs
+pro plot_lcs_final
 
-Compile_opt idl2
+  Compile_opt idl2
   
-sat='TOR'
- 
-field='CENTAURUS'
+  sat='BA'
   
-indir='~/BRITE/'+sat+'/'+field+'/data/aper_lc_intpix/'
+  field='CENTAURUS'
   
-outdir='~/BRITE/'+sat+'/'+field+'/plots/aper_lc_final/'
-  
-filein=file_search(indir+'*', count=nf)
-  
-for ff=0, nf-1 do begin
-  
-  readcol, filein[ff], time, frame, flux, xcom, $
-    ycom, temperature, vmag, bmag, resid, $
-    format='(d,i,f,x,x,x,f,f,f,f,f,f,x)'
-
-;restore, filein[ff]
+  indir='~/BRITE/'+sat+'/'+field+'/data/sos_lc_final/'
     
+  filein=file_search(indir+'HD127973.txt', count=nf)
+  
+  for ff=0, nf-1 do begin
+  
+    readcol, filein[ff], time, frame, flux, xcom, $
+      ycom, temperature, vmag, bmag, resid, $
+      format='(d,i,f,f,f,f,f,f,f)'
+      
     time1=time-time[0]
     
     nimg=n_elements(time)
     
-;    wset, 0
-;    plot, time1, flux[*,0], color=cgcolor('black'), psym=2, /YNOZERO;, xrange=[80,100]
+    wset, 0
+    plot, time1, flux, color=cgcolor('black'), psym=2, /YNOZERO;, xrange=[80,100]
     
     ; now calculate the error
     time2=time1[1:nimg-1]
@@ -45,7 +41,7 @@ for ff=0, nf-1 do begin
       ;mags=mags/median(mags)
       
       err1=[err1,(stddev(mags[iloc])/sqrt(float(ni)))^2.]
-    
+      
     endfor
     
     xx=where(finite(err1) eq 0, nxx, complement=keep)

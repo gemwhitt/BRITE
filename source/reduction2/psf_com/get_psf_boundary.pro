@@ -1,4 +1,4 @@
-pro get_psf_boundary
+pro get_psf_boundary, sat, field, target
 
   ; Program to determine frames with an adequate number of PSF pixels - use label_region.pro
   ; 
@@ -9,13 +9,13 @@ pro get_psf_boundary
   ;
   Compile_opt idl2
   
-  sat='UB'
+  ;sat='BA'
   
-  field='ORION'
+  ;field='CENTAURUS'
   
   indir='~/BRITE/'+sat+'/'+field+'/data/p4/'
   
-  filein=file_search(indir+'*.sav', count=nf)
+  filein=file_search(indir+target+'*.sav', count=nf)
   
   outdir=indir
   
@@ -65,20 +65,34 @@ pro get_psf_boundary
         goto, skipimage
       endif
       
-      ; the number of results in hist2 are the number of regions (blobs) > thr, plus the background pixels
-      ; so if n_elements(hist2) > 2 then - HP!
-;      if n_elements(hist2) gt 2 then begin
-;        stop        
-;        ; record locations of HPs
-;        for region=2, n_elements(hist2)-1 do begin
-;          ; find 1d locations of HPs in each section
-;          ihp=ri2[ri2[sort2[region]]:ri2[sort2[region]+1]-1]
-;          i2hp=array_indices(dat, ihp)
-;          for hp=0, n_elements(ihp)-1 do hp_loc[i2hp[0,hp], i2hp[1,hp], im]=1
-;          ;          plot_image, bytscl(dat, 0, 200)
-;          ;          oplot, i2hp[0,*], i2hp[1,*], color=cgcolor('orange'), psym=2         
-;        endfor
-;      endif
+       ;the number of results in hist2 are the number of regions (blobs) > thr, plus the background pixels
+       ;so if n_elements(hist2) > 2 then - HP!
+      if n_elements(hist2) gt 2 then begin
+                
+        ; record locations of HPs
+        for region=2, n_elements(hist2)-1 do begin
+          ; find 1d locations of HPs in each section
+          ihp=ri2[ri2[sort2[region]]:ri2[sort2[region]+1]-1]
+          i2hp=array_indices(dat, ihp)
+          
+          for hp=0, n_elements(ihp)-1 do begin
+            
+            x1=(i2hp[0,hp]-1) > 0
+            x2=(i2hp[0,hp]+1) < s[0]-1
+            y1=(i2hp[1,hp]-1) > 0
+            y2=(i2hp[1,hp]+1) < s[1]-1
+            
+           
+            dat[i2hp[0,hp], i2hp[1,hp]]=median(dat[x1:x2,y1:y2])
+          
+          
+           data1[*,*,im]=dat
+          endfor
+         
+          ;          plot_image, bytscl(dat, 0, 200)
+          ;          oplot, i2hp[0,*], i2hp[1,*], color=cgcolor('orange'), psym=2         
+        endfor
+      endif
       
       ; now get 2nd biggest group of pixels i.e. PSF pixels
       ind2=ri2[ri2[sort2[1]]:ri2[sort2[1]+1]-1]
@@ -151,7 +165,7 @@ pro get_psf_boundary
     fileout=outdir+file_basename(filein[f])
     
     save, filename=fileout, roi_name, exp_num, ra_dec, jd, data1, roi_loc, ccd_temp, exp_time, exp_ttl, $
-      simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, medcol, ndead, nnlin, flag, nhp1,  $
+      simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, medcol, ndead, nnlin, flag,  $
       psf_loc, npix_psf, modelpsf
       
   endfor  ; end loop over file

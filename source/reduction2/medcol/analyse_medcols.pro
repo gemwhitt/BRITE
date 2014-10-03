@@ -6,11 +6,11 @@ pro analyse_medcols
 Compile_opt idl2
   
 sat='UB'
-field='ORION'
+field='CENTAURUS'
   
-indir='~/BRITE/'+sat+'/'+field+'/data/p1/' ; CONTAINS ALL FOLDERS FOR THE TARGETS
+indir='~/BRITE/'+sat+'/'+field+'/data/p1/2014_0607/' ; CONTAINS ALL FOLDERS FOR THE TARGETS
   
-outdir='~/BRITE/'+sat+'/'+field+'/reduction/medcols/'
+outdir='~/BRITE/'+sat+'/'+field+'/reduction/medcols/2014_0607/'
 
 ; check dir exists
 chk=file_search(outdir, count=nc)
@@ -112,7 +112,6 @@ for ff=0, nf-1 do begin  ; begin loop over each file
   
   endfor  ; end loop over file
         
-  stop
 
 print, 'End of Progrmam'
 print, 'Run remove_medcol_1s with choice of 1,2, or 3

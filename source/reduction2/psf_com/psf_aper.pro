@@ -1,4 +1,4 @@
-pro psf_aper
+pro psf_aper, sat, field, target
 
   ; Use modelpsf AND psf_loc to build an optimised aperture to apply to all images to get photometry
   ; This is in binned image mode
@@ -9,9 +9,9 @@ pro psf_aper
   
   nbin=10
   
-  sat='BA'
+;  sat='BA'
   
-  field='ORION'
+;  field='CENTAURUS'
   
   indir='~/BRITE/'+sat+'/'+field+'/data/p4/'
   
@@ -19,14 +19,14 @@ pro psf_aper
   
   chkout=file_search(outdir, count=nchk)
   if nchk eq 0 then spawn, 'mkdir -p '+outdir
-  
-  filesin=file_search(indir+'*.sav', count=nf)
+    
+  filesin=file_search(indir+target+'*.sav', count=nf)
   
   if nf eq 0 then stop
   
-  for f=0, 2 do begin ;nf-1 do begin
+  for f=18, nf-1 do begin
   
-    fname=file_basename(filesin[f], '.sav')
+    fname=file_basename(filesin[f], '_p4.sav')
         
     restore, filesin[f] ;roi_name, exp_num, ra_dec, jd, data1, roi_loc, ccd_temp, exp_time, exp_ttl, $
       ;simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, medcol, ndead, nnlin, flag, nhp1,  $
@@ -107,38 +107,21 @@ pro psf_aper
       
       plot_image, bytscl(newmodel,0, 500)
       
-      sos_aper, newmodel, nbin, sos_aper1
+      ;sos_aper, newmodel, nbin, sos_aper1
       
-      ; Old method.....      
-;      thr=200
-;      
-;      ; use label region to determine number of illuminated regions and number of PSF pixels
-;      r2=label_region(newmod1 ge thr, /all_neighbors)
-;      r2=r2[1:sb[0],1:sb[1]]                         ; trim off border
-;      
-;      hist2=histogram(r2, binsize=1, locations=loc2, reverse_indices=ri2)
-;      
-;      ; sort hist2 in decreasing order
-;      sort2=reverse(sort(hist2))
-;      
-;      ind2=ri2[ri2[sort2[1]]:ri2[sort2[1]+1]-1]
-;      i2=array_indices(newmodel, ind2)
-;      
-;      xi=reform(i2[0,*])
-;      yi=reform(i2[1,*])
-;      
-;;      oplot, xi, yi, color=cgcolor('purple'), psym=2
-;;      stop
-;       
-;      psf_aper=fltarr(sb[0],sb[1])
-;      psf_aper[xi,yi]=newmodel[xi,yi]
+      thr_aper, newmodel, nbin, thr_aper1
+      
+    
+psf_aper=thr_aper1
 
-psf_aper=sos_aper1
+;plot_image, bytscl(psf_aper[*,*,1],0, 500)
+;stop
       
       ; save p5 file with binned data and psf_aper
-      fileout=outdir+file_basename(filesin[f])
+      fileout=outdir+fname+'.sav'
+      
       save, filename=fileout, roi_name, jd, data1, roi_loc, ccd_temp, $
-        vmag, bmag, flag, psf_loc, npix_psf, modelpsf, xy_com, psf_aper
+        vmag, bmag, flag, psf_loc, npix_psf, modelpsf, xy_com, psf_aper, medimg0, medcol
       
   endfor ; end loop over file
   

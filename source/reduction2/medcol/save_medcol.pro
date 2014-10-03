@@ -12,13 +12,14 @@ pro save_medcol
 Compile_opt idl2
 
 sat='UB'
-field='ORION'
+field='CENTAURUS'
 
-indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/'
+indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/2014_0607/'
 
 tardir=file_search(indir+'HD*/', count=ntar) ; target directories
 
-outdir='~/BRITE/'+sat+'/'+field+'/data/p1/'+file_basename(tardir)
+outdir='~/BRITE/'+sat+'/'+field+'/data/p1/2014_0607/'+file_basename(tardir)
+
 
 for tar=0, ntar-1 do begin
   

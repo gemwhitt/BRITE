@@ -4,13 +4,15 @@ pro aper_phot
 
 ; Save to a text file with all variables
 
+; 2 apertures in psf_aper
+
 Compile_opt idl2
 
 nbin=10
 
-sat='BA'
+sat='TOR'
 
-field='ORION'
+field='CENTAURUS'
 
 indir='~/BRITE/'+sat+'/'+field+'/data/p5/'
 
@@ -19,13 +21,15 @@ outdir='~/BRITE/'+sat+'/'+field+'/data/aper_lc/'
 chkout=file_search(outdir, count=nchk)
 if nchk eq 0 then spawn, 'mkdir -p '+outdir
 
+targets=['HD127973','HD129056','HD135379','HD136415']
+
 filesin=file_search(indir+'*.sav', count=nf)
 
 if nf eq 0 then stop
 
-for f=0, 2 do begin ;nf-1 do begin
+for f=0, nf-1 do begin
   
-  fname=file_basename(filesin[f], '_p3_p4.sav')
+  fname=file_basename(filesin[f], '.sav')
   
   restore, filesin[f] ;roi_name, jd, data1, roi_loc, ccd_temp, $
   ;vmag, bmag, flag, psf_loc, npix_psf, modelpsf, xy_com, psf_aper
@@ -37,7 +41,15 @@ for f=0, 2 do begin ;nf-1 do begin
   
   good=where(flag eq 2, ngood)
   
+  ; if there is already an output file for this target, then delete it
+  chk=file_search(outdir+fname+'.txt', count=nchk)
+  if nchk gt 0 then spawn, 'rm '+outdir+fname+'.txt'
+  
+  
   for im=0, nimg-1 do begin
+    
+    flux=[]
+    resid=[]
     
     if flag[im] ne 2 then continue
       
@@ -52,15 +64,31 @@ for f=0, 2 do begin ;nf-1 do begin
     backimg[psf_loc[0,im]:psf_loc[1,im],psf_loc[2,im]:psf_loc[3,im]]=!Values.F_NAN
     
     backgd=backimg[where(finite(backimg) eq 1, nbkgd)]
-        
+    
+    fr = fractile(backgd, [.25,.75])
+    
+    xx=where(backgd ge fr[0] AND backgd le fr[1], nxx)
+    
+ ;   print, total(backgd[xx])/float(nxx)
+    
+    bkgd=total(backgd[xx])/float(nxx)
+    
+    bkgd_err=sqrt((total((backgd[xx]-bkgd)^2))/float(nxx))
+    
+    
+    
+    ; HISTOGRAM METHOD.....    
     ; do histogram of background pixels and pick the value which is most represented but not zero
-    result=histogram(backgd, min=1, binsize=1, locations=loc)
-    
-    sort1=reverse(sort(result))
-    
-    ; choose the most populated value
-    bkgd=loc[sort1[0]]
-    bkgd_err=sqrt((total((backgd-mean(backgd))^2))/float(nbkgd))
+;    result=histogram(backgd, min=1, binsize=1, locations=loc)
+;    
+;    sort1=reverse(sort(result))
+;    
+;    ; choose the most populated value
+;    bkgd=loc[sort1[0]]
+;    bkgd_err=sqrt((total((backgd-mean(backgd))^2))/float(nbkgd))
+
+; AVERAGE method
+
     
     ; remove the background value from im0
     im0=im0-bkgd
@@ -81,51 +109,34 @@ for f=0, 2 do begin ;nf-1 do begin
     ydiff=ycen2-ycen
     
     ; now shift aperture to the center of the PSF in the image
-    aper=psf_aper*0
+    sap=size(psf_aper, /dim)
+    nap=sap[2]
     
-    ; find the locations of ALL PSF pixels gt 0
-    psfpix=where(psf_aper gt 0, npsf)
-    xpix=(array_indices(psf_aper,psfpix))[0,*]
-    ypix=(array_indices(psf_aper,psfpix))[1,*]
+    for ap=0, nap-1 do begin
+      modelapp=reform(psf_aper[*,*,ap])
+      
+      aper=modelapp*0
+      
+      ; find the locations of ALL PSF pixels gt 0
+      psfpix=where(modelapp gt 0, npsf)
+      xpix=(array_indices(modelapp,psfpix))[0,*]
+      ypix=(array_indices(modelapp,psfpix))[1,*]
+      
+      aper[xpix-xdiff,ypix-ydiff]=modelapp[xpix,ypix]
+      
+      modpix=where(aper gt 0, npsf)
+      xpix=(array_indices(aper,modpix))[0,*]
+      ypix=(array_indices(aper,modpix))[1,*]
+      
+      flux=[flux,total(im1[xpix,ypix])/nbin^2.]
+      
+      ; calculate the residual in the image after subtracting the flux within the model aperture
+      im2=im1
+      im2[xpix,ypix]=0
+      resid=[resid,total(im2)/nbin^2.]
+      
+    endfor
     
-    aper[xpix-xdiff,ypix-ydiff]=psf_aper[xpix,ypix]
-   
-    modpix=where(aper gt 0, npsf)
-    xpix=(array_indices(aper,modpix))[0,*]
-    ypix=(array_indices(aper,modpix))[1,*]
-    
-    
-;        plot_image, bytscl(im1, 0, 500)
-;        
-;        plotsym, 0, /fill, 0.2
-;        oplot, xpix, ypix, color=cgcolor('purple'), psym=8
-        
-        ; do a goodness of fit by calculating the residual of model to image
-;        res1=im1
-;        res1[xpix,ypix]=0
-;        
-;        res2=(im1-aper)/nbin^2
-;        q1=max(res2)-min(res2)
-;        qual1=[qual1,q1]
-;        
-;        if q1 gt 10 then begin
-;          plot_image, bytscl(im1, 0, 500), title=q1, charsize=0.8, color=cgcolor('black')
-;          plotsym, 0, /fill, 0.2
-;          
-;          oplot, xpix, ypix, color=cgcolor('purple'), psym=8
-;          stop
-;        endif
-
-; calculate the residual in the image after subtracting the flux within the model aperture
-    im2=im1
-    im2[xpix,ypix]=0
-    resid=total(im2)/nbin^2.
-    
-   ; if resid ge 7000 then stop
-    
-    if jd1[im] ge 16. AND resid ge 7000 then stop
-          
-    flux=total(im1[xpix,ypix])/nbin^2.
     time=jd[im]
     xcom=xy_com[0,im]
     ycom=xy_com[1,im]
@@ -135,9 +146,12 @@ for f=0, 2 do begin ;nf-1 do begin
     fileout=outdir+fname+'.txt'
     
     openw, lun, fileout, /get_lun, /append
-    printf, lun, time, flux, xcom, ycom, temperature, vmag, bmag, resid, $
-      format='(d14.6,x,d14.3,x,f7.4,x,f7.4,x,f7.3,x,f7.3,x,f7.3,x,f7.2)'
+    printf, lun, time, im, flux[0], flux[1], bkgd, bkgd_err, xcom, ycom, temperature, vmag, bmag, resid[0], resid[1], $
+      medimg0[im], average(medcol[*,im]), $
+      format='(d14.6,x,i6,x,d14.3,x,d14.3,x,f7.2,x,f7.2,x,f7.4,x,f7.4,x,f7.3,x,f7.3,x,f7.3,x,d14.3,x,d14.3,x,f7.1,x,f7.2)'
     free_lun, lun
+    
+    undefine, flux, resid
     
     npts=n_elements(time)
     

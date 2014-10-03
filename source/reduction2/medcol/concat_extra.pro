@@ -1,39 +1,27 @@
-pro concat_files3
+pro concat_extra
 
-  ; Purpose: concatenate files together for the same target, same roi ....
-  
-  ; when files have been added for the same field.
-  
-  ; Use concat_files1 if there are no previous files for that field
-  
+; concat extra months after removal of median columns (for p2 files)
+
+Compile_opt idl2
+
   sat='BA'
   field='CENTAURUS'
   
-  indir='~/BRITE/'+sat+'/'+field+'/data/p2/'
+  indir=['~/BRITE/'+sat+'/'+field+'/data/p2/','~/BRITE/'+sat+'/'+field+'/data/p2/2014_0607/']
   
-  storage=indir+'storage/'
-  
-  ; check output directory exists and make accordingly
-  chk=file_search(storage, count=nchk)
-  if nchk eq 0 then spawn, 'mkdir -p '+storage
-  
-  outdir=indir
-  
+  outdir='~/BRITE/'+sat+'/'+field+'/data/p2/'
+     
   filesin=file_search(indir+'*.sav', count=nf)
   
   fname=file_basename(filesin, '.sav')
   
-  dashpos=strsplit(fname, '_')
-  fname2=fname
-  for ii=0, nf-1 do fname2[ii]=strmid(fname[ii], 0, dashpos[ii,3]-1)
-  
   ; get number of unique output files to make
-  ufile=fname2[uniq(fname2, sort(fname2))]
+  ufile=fname[uniq(fname, sort(fname))]
   nuf=n_elements(ufile)
   
   for ii=0, nuf-1 do begin
   
-    files=filesin[where(fname2 eq ufile[ii], nf)]  ; files to be restored and concatenated
+    files=filesin[where(fname eq ufile[ii], nf)]  ; files to be restored and concatenated
     
     ; set up temporary arrays
     exp_num1=[]
@@ -65,7 +53,7 @@ pro concat_files3
       ndead1=[ndead1,ndead]
       nnlin1=[nnlin1,nnlin]
       
-      spawn, 'mv '+files[jj]+' '+storage
+;      spawn, 'mv '+files[jj]+' '+storage
       
     endfor
     
@@ -86,6 +74,26 @@ pro concat_files3
     exp_ttl=exp_ttl[0]
     ;simbad_radec, vmag, bmag, parlax, otype, sptype
     
+    ; check for duplicates
+    utime=jd[uniq(jd, sort(jd))]
+    if n_elements(utime) ne n_elements(jd) then begin
+      
+      keep=uniq(jd, sort(jd)) ; index locations of points to keep
+      
+      exp_num=exp_num[keep]
+      ra_dec=ra_dec[*,keep]
+      jd=jd[keep]
+      roi_loc=roi_loc[*,keep]
+      ccd_temp=ccd_temp[*,keep]
+      medimg0=medimg0[keep]
+      medcol=medcol[keep]
+      data1=data1[*,*,keep]
+      flag=flag[keep]
+      ndead=ndead[keep]
+      nnlin=nnlin[keep]
+      
+    endif
+    
     ; save output
     fileout=outdir+ufile[ii]+'.sav'
     
@@ -103,5 +111,7 @@ pro concat_files3
   print, 'Run hps1.pro and hps2.pro'
   
 end
+
+
 
 

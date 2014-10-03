@@ -3,16 +3,19 @@ pro remove_medcol_1s
 ; Do median column removal of raw_sav files using the full frame (medcol1) or raster (medcol3) values
 ; - decided upon by analyse_medcols.pro - restore output file
 ;
-; Outout: save new file in p2 - with medcols removed
+; Outout: save new file in p2 - with medcols removedm,
 ; 
 Compile_opt idl2
   
-sat='UB'
-field='ORION'
+sat='BA'
+field='CENTAURUS'
    
 indir='~/BRITE/'+sat+'/'+field+'/data/p1/'; CONTAINS ALL RASTER DIRECTORIES
 
 outdir='~/BRITE/'+sat+'/'+field+'/data/p2/'; CONTAINS ALL RASTER DIRECTORIES
+
+chk=file_search(outdir, count=nchk)
+if nchk eq 0 then spawn, 'mkdir -p '+outdir
     
 results_file='~/BRITE/'+sat+'/'+field+'/reduction/medcols/medcol_results.txt'
 readcol, results_file, fname, medres1, medres3, sigres1, sigres3, result, format='a,d,d,d,d,a)', skipline=1

@@ -1,16 +1,16 @@
-pro get_com
+pro get_com, sat, field, target
 
   ; Purpose: Calulate the COM for each target PSF and save info in the .sav file
   
   Compile_opt idl2
   
-  sat='UB'
+ ; sat='BA'
   
-  field='ORION'
+ ; field='CENTAURUS'
   
   indir='~/BRITE/'+sat+'/'+field+'/data/p4/'
   
-  filesin=file_search(indir+'*.sav', count=nf)
+  filesin=file_search(indir+target+'*.sav', count=nf)
   
   if nf eq 0 then stop
   
@@ -72,7 +72,7 @@ pro get_com
     ; re-save .save file with xy_com added
     
     save, filename=filesin[f], roi_name, exp_num, ra_dec, jd, data1, roi_loc, ccd_temp, exp_time, exp_ttl, $
-      simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, medcol, ndead, nnlin, flag, nhp1,  $
+      simbad_radec, vmag, bmag, parlax, otype, sptype, medimg0, medcol, ndead, nnlin, flag,  $
       psf_loc, npix_psf, modelpsf, xy_com
       
   endfor ; end loop over file

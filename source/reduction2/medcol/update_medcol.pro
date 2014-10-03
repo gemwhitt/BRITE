@@ -14,9 +14,9 @@ pro update_medcol
 Compile_opt idl2
 
 sat='UB'
-field='ORION'
+field='CENTAURUS'
 
-indir='~/BRITE/'+sat+'/'+field+'/data/p1/' ; CONTAINS ALL FOLDERS FOR THE TARGETS
+indir='~/BRITE/'+sat+'/'+field+'/data/p1/2014_0607/' ; CONTAINS ALL FOLDERS FOR THE TARGETS
 
 outdir=indir
 

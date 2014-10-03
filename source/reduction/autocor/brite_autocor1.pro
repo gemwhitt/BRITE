@@ -7,54 +7,57 @@ Compile_opt idl2
 !p.background=cgcolor('white')
 plotsym, 0, /fill, 1.3
 
-sat='BA'
-field='ORION'
+sat='TOR'
+field='CENTAURUS'
+target='HD127973'
 
-indir='~/BRITE/'+sat+'/'+field+'/data/p1/medcol2/' ; p1
-;indir='~/BRITE/'+sat+'/'+field+'/data/raw_sav/HD31237/'  ; p0
-filesin=file_search(indir+'*.sav', count=nf)
+indir='~/BRITE/'+sat+'/'+field+'/data/aper_lc_final/' 
+filesin=file_search(indir+target+'*', count=nf)
 
 for f=0, nf-1 do begin
+  
+  ; write out new file with correction applied
+  readcol, filesin[f], time, frame, flux, xcom, $
+      ycom, temperature, vmag, bmag, resid,$
+      format='(d,i,f,f,f,f,f,f,f)'
 
-  obj=obj_new('IDL_Savefile', filesin[f])
-  obj->restore, 'jd'
-  obj->restore, 'data1'
-  obj->restore, 'ccd_temp'
-  obj->restore, 'vmag'
-  obj->restore, 'medimg0'
-  
-  jd1=jd-jd[0]
-  
-  nfrm=n_elements(jd)
-  
-  fname=file_basename(filesin[f],'.sav')
-  
-  ; calculate the total DN in each image
-  totdn=lonarr(nfrm)
-  for img=0, nfrm-1 do totdn[img]=total(data1[*,*,img])
-  
-  ; calculate the average temperatures in each image
-  avgtmp=fltarr(nfrm)
-  for img=0, nfrm-1 do avgtmp[img]=average(ccd_temp[*,img])
-  
-  ; make shorter subsets of the data
-  avgtmp1=avgtmp[10000:10199]
-  totdn1=totdn[10000:10199]
-  n1=n_elements(totdn1)
-  
+;restore, filesin[f]
+;      stop
+  ;time=jd
+  time1=time-time[0]
   plotsym, 0, /fill, 0.8
-  plot, avgtmp1, totdn1, color=cgcolor('black'), psym=8, /ynozero
-  stop
+  
+  nfrm=n_elements(time)
+  
+ ; flux=fltarr(nfrm)
+ ; for im=0, nfrm-1 do flux[im]=total(data1[*,*,im])
+  
+  ;temp=fltarr(nfrm)
+  ;for im=0, nfrm-1 do temp[im]=total(ccd_temp[*,im])
+  temp=temperature
+  
+  plot, time1, flux, psym=8, color=cgcolor('black')
+  
+; stop
+  plot, time1, temp, psym=8, color=cgcolor('black')
+  
+  ; find where data becomes consistent
+;  xx=where(time1 ge 70 AND time1 le 80, nxx)
+;  
+;  time2=time1[xx]
+  flux2=flux;[xx]
+;  temp=temperature[xx]
+;  
   
   ; DO CROSS-CORRELATIONS....
-  print, correlate(avgtmp1, totdn1)
-  lag=indgen(200)
+  print, correlate(temp, flux2)
+  lag=indgen(100)
   
-  result=c_correlate(avgtmp1, totdn1, lag)
+  result=c_correlate(temp, flux2, lag)
   
   plot, result, color=cgcolor('black'), psym=8
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
+  stop
   ; DO AUTO-CORRELATIONS.......
   ac=fltarr(n_elements(lag))  
   for i=0, n_elements(lag)-1 do begin 
